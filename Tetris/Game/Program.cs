@@ -12,7 +12,8 @@
         {
             ChangeConosleValues();            
             Board board = new Board();
-            Engine engine = new Engine(board);
+            StatusScreen statusScreen = new StatusScreen();
+            Engine engine = new Engine(board, statusScreen);
             engine.Run();
         }
 

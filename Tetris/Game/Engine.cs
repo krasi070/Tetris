@@ -9,22 +9,37 @@
 
     public class Engine
     {
-        private const int maxLevel = 15;
+        private const int maxLevel = 20;
+        private const int interval = 30;
+        private const int singlePoints = 40;
+        private const int doublePoints = 100;
+        private const int triplePoints = 300;
+        private const int tetrisPoints = 1200;
         private readonly int[] hiddenArea = { 0, 1 };
-        private int level = 11;
+        private int level = 1;
+        private int linesCleared = 0;
         private long lastUpdate = 0;
+        private long score = 0;
 
         private Board board;
+        private StatusScreen statusScreen;
         private Block currBlock;
 
-        public Engine(Board board)
+        public Engine(Board board, StatusScreen statusScreen)
         {
             this.board = board;
+            this.statusScreen = statusScreen;
         }
 
         public void Run()
         {
+            this.board.RenderGameBorders();
+            this.statusScreen.Render();
             this.board.Render();
+            this.statusScreen.ChangeLinesValue(this.linesCleared);
+            this.statusScreen.ChangeScoreValue(this.score);
+            this.statusScreen.ChangeLevelValue(this.level);
+
             Stopwatch timer = new Stopwatch();
             timer.Start();
             currBlock = SpawnBlock();
@@ -32,7 +47,7 @@
             {
                 this.ProcessInput();
                 long elapsedTime = timer.ElapsedMilliseconds;
-                long timeForNextFall = lastUpdate + ((maxLevel + 1 - level) * 50);
+                long timeForNextFall = lastUpdate + ((maxLevel + 1 - level) * interval);
                 if (elapsedTime >= timeForNextFall)
                 {
                     lastUpdate = elapsedTime;
@@ -140,8 +155,47 @@
 
             if (rowsToDelete.Count > 0)
             {
-                this.RemoveFullRows(rowsToDelete.ToArray());
+                var rows = rowsToDelete.ToArray();
+
+                int timeInMilliseconds = (maxLevel + 1 - level) * (interval / 2);
+                this.board.FlashRows(rows, timeInMilliseconds);
+
+                this.RemoveFullRows(rows);
+
+                this.linesCleared += rows.Length;
+                this.statusScreen.ChangeLinesValue(this.linesCleared);
+
+                this.IncreaseScore(rows.Length);
+                this.statusScreen.ChangeScoreValue(this.score);
+
+                this.IncreaseLevelIfPossible();
+                this.statusScreen.ChangeLevelValue(this.level);
             }
+        }
+
+        private void IncreaseScore(int rowsCleared)
+        {
+            if (rowsCleared == 1)
+            {
+                this.score += this.level * singlePoints;
+            }
+            else if (rowsCleared == 2)
+            {
+                this.score += this.level * doublePoints;
+            }
+            else if (rowsCleared == 3)
+            {
+                this.score += this.level * triplePoints;
+            }
+            else if (rowsCleared == 4)
+            {
+                this.score += this.level * tetrisPoints;
+            }
+        }
+
+        private void IncreaseLevelIfPossible()
+        {
+            this.level = Math.Min(maxLevel, (this.linesCleared + 10) / 10);
         }
 
         private void RemoveFullRows(int[] rows)
@@ -203,9 +257,45 @@
                         break;
                     case ConsoleKey.UpArrow:
                     case ConsoleKey.W:
+                    case ConsoleKey.Z:
                         this.RotateBlock();
                         break;
+                    case ConsoleKey.P:
+                        this.Pause();
+                        break;
                 }
+            }
+        }
+
+        private void Pause()
+        {
+            this.board.EmptyGameArea();
+            Console.SetCursorPosition((Board.EndCol - Board.StartCol) / 2 - 7, (Board.EndRow - Board.StartRow) / 2);
+            Console.WriteLine("EXIT? (Y / N)");
+
+            ConsoleKey key = Console.ReadKey(true).Key;
+            while (true)
+            {
+                bool unpause = false;
+                switch (key)
+                {
+                    case ConsoleKey.Y:
+                        Console.Clear();
+                        Environment.Exit(0);
+                        break;
+                    case ConsoleKey.N:
+                    case ConsoleKey.P:
+                        this.board.Render();
+                        unpause = true;
+                        break;
+                }
+
+                if (unpause)
+                {
+                    break;
+                }
+
+                key = Console.ReadKey(true).Key;
             }
         }
 
