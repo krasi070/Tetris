@@ -2,12 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     public class Block
     {
+        private static readonly Random random = new Random();
+
         public Block()
             : this(GetBlockType(), 0)
         {
@@ -361,9 +360,7 @@
 
         private static byte GetBlockType()
         {
-            Random rand = new Random();
-
-            return (byte)rand.Next(1, 8);
+            return (byte)random.Next(1, 8);
         }        
 
         private static int[] GetStartingCoordinates(int type)
