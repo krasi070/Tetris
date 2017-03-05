@@ -8,13 +8,14 @@
     public class Engine
     {
         private const int maxLevel = 20;
-        private const int interval = 30;
+        private const int defaultInterval = 30;
         private const int singlePoints = 40;
         private const int doublePoints = 100;
         private const int triplePoints = 300;
         private const int tetrisPoints = 1200;
         private readonly int[] hiddenArea = { 0, 1 };
         private const string highscorePath = "../../h-1h50043s.txt";
+        private int interval = 30;
         private int level = 1;
         private int initLevel = 1;
         private int linesCleared = 0;
@@ -63,6 +64,7 @@
             this.SpawnBlock(this.currBlock);
             while (true)
             {
+                this.interval = defaultInterval;
                 this.ProcessInput();
                 long elapsedTime = timer.ElapsedMilliseconds;
                 long timeForNextFall = this.lastUpdate + ((maxLevel + 1 - this.level) * interval);
@@ -355,6 +357,7 @@
                         break;
                     case ConsoleKey.DownArrow:
                     case ConsoleKey.S:
+                        this.interval = 10;
                         this.DropBlock();
                         break;
                     case ConsoleKey.Spacebar:
